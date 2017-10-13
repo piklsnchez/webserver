@@ -1,5 +1,6 @@
 package org.piklsnchez;
 
+import java.util.stream.Stream;
 import java.io.IOException;
 import java.util.logging.Logger;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -11,7 +12,8 @@ public class Server {
     private static final String CLASS = Server.class.getName();
     private static final Logger LOG = Logger.getLogger(CLASS);
     
-    private static String sdp;
+    private static String offer  = "";
+    private static String answer = "";
     
     public static void main(String... args){
         HttpServer server = HttpServer.createSimpleServer();
@@ -19,26 +21,66 @@ public class Server {
             new HttpHandler(){
                 @Override
                 public void service(Request request, Response response) throws Exception {
+                    LOG.entering(HttpHandler.class.getName(), "service", Stream.of(request, response).toArray());
+                    
                     switch(request.getMethod().getMethodString()){
                         case "GET":
-                            response.setContentType("text/plain");
-                            response.setContentLength(sdp.length());
-                            response.getWriter().write(sdp);
-                            break;
+                            response.setContentType("application/json");
+                            response.setContentLength(offer.length());
+                            response.getWriter().write(offer);
+                        break;
                         case "POST":
                             try{
                                 String body = request.getPostBody(255).toStringContent();
                                 LOG.info(body);
-                                sdp = body;
+                                offer = body;
+                                //wait for an answer before returning
+                                while(answer.isEmpty()){
+                                    try{
+                                        Thread.sleep(1000);
+                                    } catch(InterruptedException e){}
+                                }
+                                response.setContentType("application/json");
+                                response.setContentLength(answer.length());
+                                response.getWriter().write(answer);
                             } catch(IOException e){
                                 LOG.throwing(CLASS, "service", e);
                                 throw e;
                             }
-                            break;
+                        break;
                     }
+                    LOG.exiting(HttpHandler.class.getName(), "service");
                 }
             }
-            , "/descriptor"
+            , "/offer"
+        );
+        server.getServerConfiguration().addHttpHandler(
+            new HttpHandler(){
+                @Override
+                public void service(Request request, Response response) throws Exception {
+                    LOG.entering(HttpHandler.class.getName(), "service", Stream.of(request, response).toArray());
+                    
+                    switch(request.getMethod().getMethodString()){
+                        case "GET":
+                            response.setContentType("application/json");
+                            response.setContentLength(answer.length());
+                            response.getWriter().write(offer);
+                        break;
+                        case "POST":
+                            try{
+                                String body = request.getPostBody(255).toStringContent();
+                                LOG.info(body);
+                                answer = body;
+                            } catch(IOException e){
+                                LOG.throwing(CLASS, "service", e);
+                                throw e;
+                            }
+                        break;
+                    }
+                    LOG.exiting(HttpHandler.class.getName(), "service");
+                }
+            }
+            , "/answer"
         );
         try {
             server.start();
