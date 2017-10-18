@@ -3,6 +3,10 @@ package org.piklsnchez;
 import java.util.stream.Stream;
 import java.io.IOException;
 import java.util.logging.Logger;
+import java.net.URI;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.grizzly.http.server.StaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
@@ -12,80 +16,17 @@ public class Server {
     private static final String CLASS = Server.class.getName();
     private static final Logger LOG = Logger.getLogger(CLASS);
     
-    private static String offer  = "";
-    private static String answer = "";
+    private static final String BASE_URI = "http://0.0.0.0:8080/";
     
     public static void main(String... args){
-        HttpServer server = HttpServer.createSimpleServer();
-        server.getServerConfiguration().addHttpHandler(
-            new HttpHandler(){
-                @Override
-                public void service(Request request, Response response) throws Exception {
-                    LOG.entering(HttpHandler.class.getName(), "service", Stream.of(request, response).toArray());
-                    
-                    switch(request.getMethod().getMethodString()){
-                        case "GET":
-                            response.setContentType("application/json");
-                            response.setContentLength(offer.length());
-                            response.getWriter().write(offer);
-                        break;
-                        case "POST":
-                            try{
-                                String body = request.getPostBody(255).toStringContent();
-                                LOG.info(body);
-                                offer = body;
-                                //wait for an answer before returning
-                                while(answer.isEmpty()){
-                                    try{
-                                        Thread.sleep(1000);
-                                    } catch(InterruptedException e){}
-                                }
-                                response.setContentType("application/json");
-                                response.setContentLength(answer.length());
-                                response.getWriter().write(answer);
-                            } catch(IOException e){
-                                LOG.throwing(CLASS, "service", e);
-                                throw e;
-                            }
-                        break;
-                    }
-                    LOG.exiting(HttpHandler.class.getName(), "service");
-                }
-            }
-            , "/offer"
-        );
-        server.getServerConfiguration().addHttpHandler(
-            new HttpHandler(){
-                @Override
-                public void service(Request request, Response response) throws Exception {
-                    LOG.entering(HttpHandler.class.getName(), "service", Stream.of(request, response).toArray());
-                    
-                    switch(request.getMethod().getMethodString()){
-                        case "GET":
-                            response.setContentType("application/json");
-                            response.setContentLength(answer.length());
-                            response.getWriter().write(offer);
-                        break;
-                        case "POST":
-                            try{
-                                String body = request.getPostBody(255).toStringContent();
-                                LOG.info(body);
-                                answer = body;
-                            } catch(IOException e){
-                                LOG.throwing(CLASS, "service", e);
-                                throw e;
-                            }
-                        break;
-                    }
-                    LOG.exiting(HttpHandler.class.getName(), "service");
-                }
-            }
-            , "/answer"
-        );
+        ResourceConfig resourceConfig = new ResourceConfig().packages("org.piklsnchez.rest");
+        HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), resourceConfig);
+        server.getServerConfiguration().addHttpHandler(new StaticHttpHandler("."), "/static");
         try {
             server.start();
             System.out.println("Press any key to stop the server...");
             System.in.read();
+            server.stop();
         } catch (Exception e) {
             LOG.severe(e.toString());
         }
