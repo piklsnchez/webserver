@@ -41,10 +41,10 @@ public class Server {
                 @Override
                 public void onMessage(WebSocket ws, String data){
                     LOG.entering(getClass().getName(), "onMessage", Stream.of(ws, data).toArray());
-                    if(data.contains("\"offer\":")){
+                    if(data.contains("\"type\":\"offer\"")){
                         this.offer = data;
                         sockets.parallelStream().filter(w -> !Objects.equals(w, ws)).forEach(w -> w.send(this.offer));
-                    } else if(data.contains("\"answer\":")){
+                    } else if(data.contains("\"type\":\"answer\":")){
                         this.answer = data;
                         sockets.parallelStream().filter(w -> !Objects.equals(w, ws)).forEach(w -> w.send(this.answer));
                     }
