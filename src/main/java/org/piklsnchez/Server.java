@@ -44,7 +44,7 @@ public class Server {
                     if(data.contains("\"type\":\"offer\"")){
                         this.offer = data;
                         sockets.parallelStream().filter(w -> !Objects.equals(w, ws)).forEach(w -> w.send(this.offer));
-                    } else if(data.contains("\"type\":\"answer\":")){
+                    } else if(data.contains("\"type\":\"answer\"")){
                         this.answer = data;
                         sockets.parallelStream().filter(w -> !Objects.equals(w, ws)).forEach(w -> w.send(this.answer));
                     }
