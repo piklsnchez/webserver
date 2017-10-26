@@ -1,8 +1,8 @@
 package org.piklsnchez;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -18,13 +18,12 @@ public class Server {
     
     public static void main(String... args){
         HttpServer server = HttpServer.createSimpleServer(); 
-        //server.getServerConfiguration().addHttpHandler(new StaticHttpHandler("."), "/static");
         server.getListener("grizzly").registerAddOn(new WebSocketAddOn());
         WebSocketEngine.getEngine().register("/ws", "/event", 
             new WebSocketApplication() {
                 private String offer  = "{}";
                 private String answer = "{}";
-                private List<WebSocket> sockets = new ArrayList<>();
+                private final Set<WebSocket> sockets = new CopyOnWriteArraySet<>();
                 
                 @Override
                 public void onConnect(WebSocket ws){
