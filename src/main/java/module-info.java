@@ -14,7 +14,7 @@ module Webserver {
     requires jersey.client;
     requires jersey.media.jaxb;
     requires jersey.common;
-    requires jersey.hk;
+    //requires jersey.hk;
     requires osgi.resource.locator;
     requires hk2.locator;
     requires hk2.api;
