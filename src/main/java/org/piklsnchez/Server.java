@@ -1,8 +1,6 @@
 package org.piklsnchez;
 
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.glassfish.grizzly.http.server.HttpServer;
